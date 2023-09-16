@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.0...v1.0.1) (2023-09-16)
+
+
+### Bug Fixes
+
+* **pkg:** expose extract oidc request uuid from origination cookie ([d0bf7fb](https://github.com/whodisio/simple-oidc-auth/commit/d0bf7fba4f48ded91a4b1deacaeeb5a7bef31479))
+
 ## 1.0.0 (2023-09-16)
 
 
