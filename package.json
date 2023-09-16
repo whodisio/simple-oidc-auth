@@ -2,7 +2,7 @@
   "name": "simple-oidc-auth",
   "author": "whodis",
   "description": "A simple, convenient, and safe interface for interacting with JSON Web Tokens (JWTs) for authentication and authorization",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "repository": "whodisio/simple-oidc-auth",
   "homepage": "https://github.com/whodisio/simple-oidc-auth",
   "keywords": [

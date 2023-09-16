@@ -1,0 +1,16 @@
+# Changelog
+
+## 1.0.0 (2023-09-16)
+
+
+### Features
+
+* **docs:** add all docs and update readme with full info ([36689b9](https://github.com/whodisio/simple-oidc-auth/commit/36689b91c3219579dee56ec76766b230881f43da))
+* **init:** initialize based on simple-jwt-auth ([48c53d0](https://github.com/whodisio/simple-oidc-auth/commit/48c53d06ce46e96630acdb54fe936d6da71bcdb2))
+* **request:** add frontend auth request uri logic ([31e7b01](https://github.com/whodisio/simple-oidc-auth/commit/31e7b01de82199f68deb3d3769a13421e3018794))
+* **response:** add logic for parsing and exchanging response for tokens ([53b4305](https://github.com/whodisio/simple-oidc-auth/commit/53b4305e99bd8b06746f4799edbcc03b4f895778))
+
+
+### Bug Fixes
+
+* **practs:** bump to latest best practs ([4abe85f](https://github.com/whodisio/simple-oidc-auth/commit/4abe85f688194ee22cf1e6147f4c8903aec9f4a3))
