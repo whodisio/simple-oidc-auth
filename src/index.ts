@@ -11,6 +11,7 @@ export { parseOidcAuthenticationResponse } from './logic/response/parse/parseOid
 export { getAuthedClaimsFromOidcIdentityToken } from './logic/wellknown/tokens/getAuthedClaimsFromOidcIdentityToken';
 export { isOfOidcIdentityTokenClaimsApple } from './logic/wellknown/tokens/isOfOidcIdentityTokenClaimsApple';
 export { isOfOidcIdentityTokenClaimsGoogle } from './logic/wellknown/tokens/isOfOidcIdentityTokenClaimsGoogle';
+export { extractOidcRequestUuidFromOriginationCookie } from './logic/response/parse/extractOidcRequestUuidFromOriginationCookie';
 
 // errors
 export { OidcAuthenticationResponseMalformedError } from './logic/errors/OidcAuthenticationResponseMalformedError';
