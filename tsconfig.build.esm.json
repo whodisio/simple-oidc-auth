@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "outDir": "dist/esm",
+    "rootDir": "src"
+  },
+  "exclude": [
+    "dist",
+    "coverage",
+    "node_modules",
+    "acceptance",
+    "provision",
+    "jest.*",
+    "prettier.*",
+    "commitlint.*",
+    "src/**/*.test.(ts|js)"
+  ]
+}
