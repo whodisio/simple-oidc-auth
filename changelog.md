@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.1...v1.0.2) (2023-09-16)
+
+
+### Bug Fixes
+
+* **pkg:** ensure package index refed correctly ([c3ea26b](https://github.com/whodisio/simple-oidc-auth/commit/c3ea26b956a449dff6a7073e3ed36a84fc844c7a))
+
 ## [1.0.1](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.0...v1.0.1) (2023-09-16)
 
 
