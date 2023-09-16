@@ -1,5 +1,6 @@
-import { OidcIdentityProvider } from '../../../../domain/OidcIdentityProvider';
-import { UnexpectedCodePathError } from '../../../../utils/errors/UnexpectedCodePathError';
+import { UnexpectedCodePathError } from '@ehmpathy/error-fns';
+
+import { OidcIdentityProvider } from '../../../domain/OidcIdentityProvider';
 
 /**
  * a lookup map which defines the authorization endpoint for each identity provider

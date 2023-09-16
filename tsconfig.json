@@ -13,6 +13,7 @@
     "sourceMap": true,
     "outDir": "dist",
     "target": "es6",
+    "noUncheckedIndexedAccess": false // TODO: undo this once cross-sha256 is not a direct dependency
   },
   "include": [
     "**/*.ts"

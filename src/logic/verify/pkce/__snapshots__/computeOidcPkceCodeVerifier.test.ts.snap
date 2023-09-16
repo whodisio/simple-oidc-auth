@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`computeOidcPkceCodeVerifier should look nice 1`] = `"opcv_b937166d9627c0c1289d0fae73074b7a31d796d076e9adb843738f059ecd485c"`;

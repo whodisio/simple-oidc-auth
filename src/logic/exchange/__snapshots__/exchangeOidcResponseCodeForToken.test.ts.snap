@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`exchangeOidcAuthcodeForToken should correctly send the request via rest.post 1`] = `
+[
+  [
+    {
+      "data": {
+        "client_id": "__oidc_client_id__",
+        "client_secret": "__oidc_client_secret__",
+        "code": "__oidc_response_code__",
+        "code_verifier": "__oidc_pkce_code_verifier__",
+        "grant_type": "authorization_code",
+        "redirect_uri": "__oidc_request_redirect_uri__",
+      },
+      "headers": {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      "method": "POST",
+      "url": "__endpoint__",
+    },
+  ],
+]
+`;
