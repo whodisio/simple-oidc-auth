@@ -1,271 +1,350 @@
 # simple-oidc-auth
 
-![ci_on_commit](https://github.com/whodisio/simple-oidc-auth/workflows/ci_on_commit/badge.svg)
-![deploy_on_tag](https://github.com/whodisio/simple-oidc-auth/workflows/deploy_on_tag/badge.svg)
+easily add oidc auth to your app from a secure, [pit-of-success](https://blog.codinghorror.com/falling-into-the-pit-of-success/)
 
-A simple, convenient, and safe interface for using JSON Web Tokens (JWTs) for authentication and authorization
-
-Simple:
-
-- exposes simple, declarative functions for each supported use case
-- throws self explanatory errors when something goes wrong
-- leverages open source standards to securely simplify the auth process
-  - e.g., can automatically lookup the public key required to verify a JWT by using the [OAuth2 Discovery Flow](https://tools.ietf.org/id/draft-ietf-oauth-discovery-08.html)
-
-Safe:
-
-- enforces best practices of JWT authentication
-- eliminates accidentally using JWTs unsafely, by constraining exposed methods to secure and declarative use cases
-
-In otherwords, it's built to provide [a pit of success](https://blog.codinghorror.com/falling-into-the-pit-of-success/)
-
----
-
-# Background
-
-JSON Web Token (JWT) authentication is a great way to implement authentication and authorization for user facing applications
-
-Using JWTs to sign requests enables distributed and stateless auth which eliminates latency and reduces costs, for snappy user experiences at scale.
-- the request-signature, the jwt, can be authenticated publicly, by anyone
-  - [distributed] no api calls to issuer-server required, client-public-key is published at wellknown url, cacheable, static
-  - [stateless] no state to manage, access, or upkeep for authenticating requests
-- the request-signature, the jwt, identifies the requester and scope
-  - [distributed] no api calls to issuer-server required, client identity is embedded and extractable from the request-signature
-  - [stateless] no state to manage, access, or upkeep for identifying the requester
-
-References:
-- [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
-- [JSON Web Signature (JWS)](https://www.rfc-editor.org/rfc/rfc7515.html)
-- [OAuth 2.0 Authorization Server Metadata](https://tools.ietf.org/html/rfc8414)
-- [JSON Web Key (JWK)](https://tools.ietf.org/html/rfc7517)
-- [The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://tools.ietf.org/html/rfc8414)
-- [JSON Web Token Best Current Practices](https://tools.ietf.org/html/draft-ietf-oauth-jwt-bcp-07)
-
-
-Note: if you're looking to implement authentication and authorization for SDK applications, [HMAC Key Auth](https://github.com/whodisio/simple-hmackey-auth) may be a better fit due to their [less vulnerable](https://softwareengineering.stackexchange.com/a/444092/146747) nature
-
----
-
-# Install
-
-```sh
-npm install --save simple-oidc-auth
-```
-
-# Example
-
-### Authenticate and get claims from a JWT
-
-This looks up the public key for the token and authenticates the claims. Useful any time you need to make sure that the claims are accurate (e.g., server side).
+# install
 
 ```ts
-import { getAuthedClaims } from 'simple-oidc-auth';
-const claims = getAuthedClaims({
-  token: 'eyJhbGciOiJSUzI1NiIsInR...', // a jwt
-  issuer: 'https://auth.whodis.io/...', // who you expect to have issued the token, must match `token.claims.iss`
-  audience: 'ae7f50b0-c762-821...', // the audience the token should be for, must match `token.claims.aud`
+npm install simple-oidc-auth
+```
+
+# use
+
+OpenID Connect protocols enable your application (i.e., `frontend`, `backend`) to auth users based on credentials they already have with other applications (i.e., `identity-provider`, `idp`).
+
+This can be leveraged to benefit your application by:
+- reducing friction at signin -> increase conversions
+- increasing trust at signin -> increase conversions
+- enabling cross application interactions -> increase functionality
+
+Here's how
+
+### 1. register with the identity-providers
+
+OpenID Connect auth flows are dependent an identity-providers (e.g., Google, Apple, Facebook, etc) being willing to facilitate the auth process for your application.
+
+Naturally these identity-providers require you to register your application with them before they will begin accepting auth requests on behalf of your application.
+
+Here are links for how to do so for some of the well known oidc identity providers
+- [apple oidc registration docs](./docs/oidc/registration/apple.md)
+- [google oidc registration docs](./docs/oidc/registration/google.md)
+- [facebook oidc registration docs](./docs/oidc/registration/facebook.md)
+
+The output you need to acquire is for the next steps is
+- a `clientId` - which identifies your application
+- a `clientSecret` or a `clientPrivateKey` - which can be used to authenticate your application.backend
+
+### 2. acquire a challenge hash and challenge code from your backend
+
+OpenID Connect auth flows require your application to persist some state for each auth request in order to securely complete the process.
+
+Why? Fundamentally, this is because OpenID Connect is driven by redirects to and from your application. This state is required for your application to verify that the response is authentic and has not tampered with.
+
+```ts
+import { computeOidcRequestHash, computeOidcPkceCodeChallenge, computeOidcPkceCodeVerifier } from 'simple-oidc-auth';
+
+/**
+ * define a unique identifier for the request which your backend can identify the request with
+ */
+const oidcRequestUuid: string = ...;
+
+/**
+ * define the uuid of the session for the request, typically the `jwt.jti` of the authed user, if one exists
+ */
+const userSessionUuid: string | null = ...;
+
+/**
+ * compute a one way hash of the request variables, which will be forwarded on the response and compared against state
+ */
+const oidcRequestHash = computeOidcRequestHash({
+  oidcRequestUuid,
+  userSessionUuid,
+});
+
+/**
+ * compute a one way hash of the request variables and convert it into a pkce code challenge, which the identity-provider will verify
+ */
+const oidcPkceCodeChallenge = computeOidcPkceCodeChallenge({
+  verifier: computeOidcPkceCodeVerifier({
+    oidcRequestUuid,
+    userSessionUuid,
+  }),
 });
 ```
 
-As long as your token's issuer publishes [Authorization Server Metadata (an OAuth2 standard)](https://tools.ietf.org/html/rfc8414), we can find the public key for you and use it to authenticate your JWT.
+### 3. begin the auth request on the frontend
 
-### Get token from headers
+Given that you now have all of the inputs required to make a secure oidc auth request, you may now begin the process.
 
-This grabs the token from the standard bearer token header for you. Useful whenever you need to grab a token from an HTTP request.
+On your frontend you'll use these inputs to create an authentication request uri that you'll use to redirect your user to the identity-provider. The identity provider will then ask your user to signin and approve access to your app.
 
-```ts
-import { getTokenFromHeaders } from 'simple-oidc-auth';
-const token = getTokenFromHeaders({ headers });
-```
-
-Tokens are typically passed to apis through the `Authorization` header, according to the [OAuth 2.0 Authorization Standard](https://tools.ietf.org/html/rfc6750), so this exposes an easy way to grab the token from there.
-
-Alternatively, tokens may also be passed through an `Authorization` cookie, in the header. This is useful in browser environments where in order to protect users from XSS you store the JWT in an HTTPOnly cookie, inaccessible from JS. This method exposes an easy way to grab the token from an `authorization` cookie, with [two layer CSRF protection](#authorization-cookie).
-
-### Get claims from a JWT without checking their authenticity
-
-This simply decodes the body of the token and returns the claims, without checking anything. Useful for insecure environments (e.g., client side) where you cant trust data anyway - and debugging.
+Once your user successfully auths with the identity provider, the identity provider will then redirect the user back to your `redirectUri`. This redirectUri should point directly to your backend.
 
 ```ts
-import { getUnauthedClaims } from 'simple-oidc-auth';
-const claims = getUnauthedClaims({
-  token: 'eyJhbGciOiJSUzI1NiIsInR...', // a jwt
-});
-```
+import {
+  getOidcAuthenticationRequestUri,
+  getAuthenticationEndpointByOidcIdentityProvider,
+  OidcIdentityProvider
+} from 'simple-oidc-auth';
 
-### Create a secure distributed auth token
+// define where you would like the identity provider to redirect the user with the oidc auth response
+const redirectUri = '__uri_to_your_backend__';
 
-This method creates a JWT after checking that requirements for secure distributed authentication with the would be token are met.
-
-```ts
-import { createSecureDistributedAuthToken } from 'simple-oidc-auth';
-const token = createSecureDistributedAuthToken({
-  headerClaims: { alg: 'RS256', kid: '4.some_directory', typ: 'JWT' },
-  claims: {
-    iss: 'https://auth.whodis.io/...',
-    aud: 'f7326c71-cf5a-4637-9580-8e83c2692e96',
-    sub: 'e41ea57c-f630-45ba-88fc-8888b06c588e',
-    exp: 2516239022,
+// create a auth request uri for an identity-provider
+const authRequestUri = getOidcAuthenticationRequestUri({
+  provider: {
+    authenticationEndpoint: getAuthenticationEndpointByOidcIdentityProvider(
+      OidcIdentityProvider.GOOGLE,
+    ),
   },
-  privateKey, // rsa pem format private key string
+  operator: {
+    clientId: '__client_id__', // this is the clientId that the identity provider gave you, when you registered with them
+  },
+  request: {
+    scope: 'openid profile email', // whatever scopes you are requesting
+    hash: oidcRequestHash,
+    pkce: oidcPkceCodeChallenge,
+    redirectUri,
+  },
 });
+
+// navigate to that request uri
+window.location.href = authRequestUri;
 ```
 
-# Docs
+### 4. parse the auth response on your backend
 
-### `fn:getAuthedClaims({ token: string, issuer: string, audience: string | string[] })`
+The identity provider's oidc auth response will be sent to your backend via the redirectUri defined in the step above.
 
-Use this function when you want to authenticate and get the claims that a token is making for use in your applications.
-
-If your token's issuer publishes [Authorization Server Metadata (an OAuth2 standard)](https://tools.ietf.org/html/rfc8414), then we can find the public key for you. We'll cache it up to 5 min by default to speed up subsequent checks.
-
-We check the authenticity of the token in the following ways:
-
-- the token is valid
-  - by verifying the signature
-    - check that we can verify the signature comes from the issuer, with the public key
-    - check that the header/payload have not been tampered with, with the signature
-    - check that the token uses an asymmetric signing key, for secure decentralized authentication
-  - by verifying the timestamps
-    - token is not expired
-    - token is not used before its allowed to be
-- the token comes from the expected issuer
-  - otherwise, anyone can issue claims to your server
-- the token is meant for your application
-  - otherwise, a token from the same issuer but for a different application could be used to access your application
-
-References:
-
-- https://tools.ietf.org/html/draft-ietf-oauth-jwt-bcp-07
-- https://www.sjoerdlangkemper.nl/2016/09/28/attacking-jwt-authentication/
-- https://www.cloudidentity.com/blog/2014/03/03/principles-of-token-validation/
-
-Example:
+In order to use the response you'll need to parse it from the rest request it was sent in. This library makes it easy to do so
 
 ```ts
-import { getAuthedClaims } from 'simple-oidc-auth';
-const claims = getAuthedClaims({
-  /**
-   * The JWT that you're checking for authenticity before getting claims
-   */
-  token,
+// extract the oidcRequestUuid from the secure,samesite,httpsonly origination cookie set by your backend
+const { oidcRequestUuid } =
+  await extractOidcRequestUuidFromOriginationCookie({ headers });
 
-  /**
-   * Who you expect to issue the JWT.
-   *
-   * The issuer `string` that you define here is checked against the issuer that the token was issued by (`token.claims.iss`)
-   *
-   * This is required because it is critical for security that you only accept tokens from expected issuers.
-   *
-   * `getAuthedClaims` will throw an error if `issuer !== token.claims.iss`
-   */
-  issuer,
+// use the request uuid to lookup any metadata needed about your request
+const { redirectUri, issuerUri, audienceUri } =
+  await getOidcRequestDetails({ oidcRequestUuid });
 
-  /**
-   * The id(s) that the JWT will use to specify that it was created for your application.
-   *
-   * The audience `string` (or each `string` in the `string[]`) that you define here is checked against the audience that the token is for (`token.claims.aud`).
-   *
-   * This is required, as it is critical for security that you only trust tokens that were intended for you
-   *
-   * `getAuthedClaims` will throw an error if `audience !== token.claims.aud`
-   */
-  audience,
+// parse the oidc auth response to extract the claims the response made
+const claims = await parseOidcAuthenticationResponse({
+  method,
+  headers,
+  endpoint: redirectUri,
+  queryParams,
+  session: {
+    issuer: issuerUri,
+    audience: audienceUri,
+  },
 });
 ```
 
-_note: you can check whether your token was issued by an auth service that supports this OAuth2 Discovery Flow by checking whether the auth server exposes `Authorization Server Metadata` at expected address: `${token.iss}/.well-known/oauth-authorization-server`_
+### 5. exchange auth response claims for tokens on your backend
 
-### `fn:getTokenFromHeaders({ token: string, issuer: string, audience: string | string[] })`
+The oidc auth response claims produced by the step above can now be exchanged for tokens from the identity-provider.
 
-Use this function when you want to safely extract the token from the headers of the request made to your server.
+This library and the identity provider will verify that the claims made are authentic to eliminate security vulnerabilities systematically. More details on this are provided in this readme below.
 
-This function supports two ways of extracting a token from headers:
+Here's how to make the exchange
 
-- through the `Authorization` header
-  - commonly used in native applications (iOS, Android, CLI, etc) where the user has programmatically accessible secure storage for their token
-  - [OAuth 2.0 Authorization Standard](https://tools.ietf.org/html/rfc6750)
-- through the `Authorization` cookie
-  - commonly used in web applications, where users do not have programmatically accessible secure storage for their token, due to XSS, and must rely on HTTPOnly cookies instead
+```ts
+import {
+  getTokensFromOidcResponseClaims,
+  getTokenEndpointByOidcIdentityProvider,
+  OidcIdentityProvider,
+} from 'simple-oidc-auth';
 
-#### Authorization Header
+// exchange authcode for tokens
+const tokens = await getTokensFromOidcResponseClaims({
+  provider: {
+    tokenEndpoint: getTokenEndpointByOidcIdentityProvider(
+      OidcIdentityProvider.GOOGLE
+    ),
+  },
+  operator: {
+    oidcClientId: '__client_id__', // the client id the identity-provider granted to you after registration
+    oidcClientSecret: credentials.clientSecret, // the client secret the identity-provider granted to you after registration
+  },
+  claims, // the claims from the step above
+});
+```
 
-Extracting the token from an authorization header is very simple. We simply look for a header with the name `Authorization` ([case insensitive, per spec](https://stackoverflow.com/a/5259004/3068233)) and get the token from it.
+### bonus. extract claims from identity token
 
-This function supports the authorization header defining the token with prefix of `Bearer` as well as not having a prefix at all:
+Now that you have the identity token, you'll want to extract the claims from it in order to use it.
 
-- `Bearer __TOKEN__`
-- `__TOKEN__`
+Here's how you can do so easily and securely
 
-#### Authorization Cookie
+```ts
+import { getAuthedClaimsFromOidcIdentityToken, OidcIdentityProvider } from 'simple-oidc-auth';
 
-Extracting the token from an authorization cookie is simple, but requires protecting the user against cross-site-request-forgery (CSRF) attempts.
+const claims = await getAuthedClaimsFromOidcIdentityToken({
+  token: tokens.identity,
+  provider: OidcIdentityProvider.GOOGLE,
+  oidcClientId: '__client_id__',
+});
+```
 
-When a request is made with an authorization _header_, we know that the origin making the request has full programmatic access to the JWT, which confirms that the token owner intended to send the token. However, when a request is made with an authorization _cookie_, the origin making the request typically does not have programmatic access to the JWT at all. Instead, the browser simply sends the cookie to the target domain any time a request is made to that domain - leaving it susceptible to CSRF.
+# background
 
-Cross-site-request-forgery (CSRF) is an attack that leverages the fact that browsers often do not consider the origin of a request when considering whether to send cookies. Specifically, if a user has a cookie from `yoursite.com`, visits `hakrsite.com`, and `hakrsite.com` sends a request to `yoursite.com` - the user's browser will happily send `yoursite.com` the user's cookie in the request that `hakrsite.com` made (e.g., `/transfer/funds?from=user&to=hakr&dollars=10000`). Without additional safeguards against CSRF, `yoursite.com` will see the cookie and authenticate the request.
+openid-connect, oidc, is an opensource standard which allows users to leverage the identities they've established with apps they already use to sign into other apps. (e.g., social auth)
 
-This function, `getTokenFromHeaders`, leverages a two layer defence from the recommendations of [OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html):
+at a high level, a secure, successful flow consists of three steps
 
-1. [Verifying Origin with Standard Headers](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#verifying-origin-with-standard-headers)
-   - "Reliability on these headers comes from the fact that they cannot be altered programmatically (using JavaScript with an XSS vulnerability) as they fall under forbidden headers list, meaning that only the browser can set them"
-2. [Synchronizer Token Based Mitigation](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#token-based-mitigation)
-   - "CSRF tokens prevent CSRF because without token, attacker cannot create a valid requests to the backend server."
+![oidc flow illustration](https://i.imgur.com/sbXWilQ.png)
 
-This library leverages the properties of JWTs in order to make the implementation of origin-verification and anti-csrf-tokens seamless from the eyes of the developer.
+1. get a `challenge.key` from your backend (to eliminate [csrf vuln.](https://owasp.org/www-community/attacks/csrf))
+   1. your frontend asks your backend to issue a `challenge` with `details` about the request
+   2. your backend responds with a `challenge.key` under which it persisted the `challenge.details`
+2. get a `challenge.answer` from the identity-provider
+   1. your frontend redirects the user to the identity-provider's authentication ui
+   2. the identity-provider redirects the user back to your frontend with a `challenge.answer` attached
+3. exchange the `challenge.answer` for `tokens` on your backend
+   1. your frontend sends the `challenge.key` and `challenge.answer` to your backend
+   2. your backend sends the `challenge.answer`, `oidc.client.secret`, and `challenge.details` to the identity-provider
+   3. the identity-provider authenticates that the inputs are correct and exchanges them for a `tokens`
 
-The first layer, `Verify Origin with Standard Headers`, is composed of two parts:
 
-1. figuring out the `target origin` and `source origin`
+the identity provider commonly returns three types of `tokens` to your backend
+- `identity-token`, which can be used to identify the user
+- `access-token`, which can be used to access protected resources
+- `refresh-token`, which can be used to replace expired access-tokens
 
-   - `sourceOrigin = header.origin ?? header.referrer`, as defined by the OWASP recommendations
-      - these can be trusted because they are restricted headers, which can only be set by browsers
-      - `if (!sourceOrigin) throw new PotentialCSRFAttackError` - dont allow requests without either `origin` or `referrer` defined
-   - `targetOrigin = jwt.aud`, i.e. the audience claim of the token
-      - the `aud` claim of a JWT should be the `uri` of the target origin that the token is intended to be consumed by
 
-2. comparing the `target origin` and `source origin`
+refs
+- [https://datatracker.ietf.org/doc/html/rfc6749#section-1.2](https://datatracker.ietf.org/doc/html/rfc6749#section-1.2)
 
-   - `if (!isSameSite(sourceOrigin, targetOrigin)) throw new PotentialCSRFAttackError`
-      - check that `isSameSite(sourceOrigin, targetOrigin)`
-         - `api.yoursite.com` and `www.yoursite.com` are the same site, since they differ only by subdomain
-         - `yoursite.github.io` and `mysite.github.io` are _not_ the same site, since domains like `github.io` and `cloudfront.net` are a [public domains](https://publicsuffix.org/)
 
-The second layer, `Synchronizer Token Based Mitigation`, is composed of three parts:
 
-1. a unique, secure, and random anti-csrf-token is returned by the auth server (so an attacker can't guess or deduce the token)
+# security
 
-   - the anti-csrf-token is expected to be a signature-redacted form of the auth-token
-     - signature-redacted meaning the signature of the JWT is replaced with `__REDACTED__`, ensuring that this JWT can not be used for authentication
-       - guarantees the anti-csrf-token is not a risk if stolen by XSS, safe to store in memory or local-storage
-       - otherwise, the anti-csrf-token would actually present a significant XSS vulnerability
-       - `getTokenFromHeaders` checks this with `if (antiCsrfTokenSignature !== '__REDACTED__') throw new PotentialXSSVulnerabilityError`
-     - signature-redacted meaning that the header and body claims of the anti-csrf-token are equivalent to the auth-token
-       - guarantees that the anti-csrf-token is synchronized to the auth-token of this specific session
-       - otherwise, the anti-csrf-token could not be verified on the serverside in a stateless, distributed way
-       - `getTokenFromHeaders` checks this with `if (authTokenBody !== antiCsrfTokenBody || authTokenHeader !== antiCsrfTokenBody) throw new PotentialCSRFAttackError`
-   - the auth-token must have a random, unique `jti` claim
-     - guarantees the anti-csrf-token is random and unique per session
-     - otherwise, the anti-csrf-token could be guessed or deduced, posing a CSRF vulnerability
-     - `getTokenFromHeaders` checks this with `if (!isUuidV4(jwt.jti)) throw new PotentialCSRFVulnerabilityError`
-   - the authorization cookie, storing the auth-token, must be `HTTPOnly` and `Secure` to protect against XSS and MITM attacks
-     - otherwise, not only could the anti-csrf-token be stolen, but worse the auth-token itself could be stolen - making CSRF the least of your concerns
+this library follows a `pit-of-success` design
 
-2. the anti-csrf-token is sent on each request in the body or custom header (proving that the source of the request has programmatic access to the anti-csrf-token)
+it is secure by default, enforces best practices, and makes it hard or impossible to use it in ways that produce vulnerabilities
 
-   - `getTokenFromHeaders` expects that the anti-csrf-token is sent in the [authorization header](#authorization-header) of the request
-     - sending the anti-csrf-token in the authorization header allows browser and native environments to have the same exact code path, simplifying cross platform development.
-     - sending the anti-csrf-token in the authorization header also proves that the requester has programmatic access to the anti-csrf-token, proving they were given it at some point
+further, it exceeds oidc standards and already meets many of the [financial grade standards](https://openid.net/specs/fapi-2_0-security-02.html#name-main-differences-to-fapi-10)
+- requires pkce [proof-key-for-code-exchange](https://datatracker.ietf.org/doc/html/rfc7636) ✅
+- requires [authorization-code-flow](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) ✅
+- requires [`state`-origination-cookie](https://datatracker.ietf.org/doc/html/rfc6819#section-5.3.5) ✅
 
-3. the server verifies the anti-csrf-token when processing each request (otherwise an attacker could pass in random values)
 
-   - the auth-token, jwt, must be found a cookie named `authorization` ([case sensitive](https://stackoverflow.com/a/11312272/3068233))
-   - the anti-csrf-token must be found in the authorization header, as mentioned in part 2
-   - `getTokenFromHeaders` verifies that the anti-csrf-token is synchronized, unique, random, and secure - by conducting the checks mentioned in part 1
-     - this verification ensures that this request could only have been made by the origin to which we gave the `jwt`
+### 🛡️ no tokens in browsers
 
-Important Note: CSRF protection is only useful when the website is not under XSS attack. While storing the auth-token in a cookie prevents XSS attacks from stealing the token directly, it does not prevent an XSS attack from making requests from your site on the users browser. In otherwords, if your site has been attacked with a custom XSS attack, CSRF is the least of your concerns.
+This library eliminates the known [`cross-site-scripting` (XSS) vulnerability](https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth) possible in `openid-connect` (OIDC) strategies by instead requiring that all [authentication requests](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) are of `response_type=code` per the [FAPI 2.0](https://openid.net/specs/fapi-2_0-security-02.html#name-main-differences-to-fapi-10) mandate.
 
-Important Note: CSRF protection is only useful when the cookie itself is maximally protected. Please ensure that the cookie storing the token is protected with the following flags:
-- `Secure`: to ensure that the cookie is only transmitted over HTTPS (protects against MITM)
-- `HTTPOnly`: to ensure that the cookie is inaccessible to Javascript (protects against XSS)
+OIDC authentication strategies are susceptible to XSS whenever they provide sensitive data to the frontend.
+
+- 🛑 XSS vuln.: attacker can steal the identity or access tokens of a user
+  - root cause:
+    - browsers do not have a secure storage mechanism; all data in the browser should be assumed vulnerable
+  - for example:
+    - `funnymemes.com` browser extension could read the `oidcTokens` from the browser and could steal it
+
+The `response_type=code` authentication request parameter required by this library eliminates this vulnerability.
+
+Specifically, this library forces the frontend to only get a short lived `oidcResponseCode` in response to the authentication request. This `oidcResponseCode` must then be sent to your backend which can exchange it for `oidcTokens` with the identity provider by submitting the `oidcResponseCode` along with a `oidcClientSecret` known only to your backend.
+
+If an attacker has access to your frontend via XSS, they will never have direct access to the `oidcTokens`. They will only have access to an `oidcResponseCode` but they will not be able to exchange this `oidcResponseCode` for `oidcTokens` either. The identity provider will reject the token exchange because the attacker will not know the `oidcClientSecret` for which the `oidcResponseCode` was issued 🛡️️
+
+In other words, this guarantees that the user's `oidcTokens` are never exposed to the frontend or accessible from data in the frontend 💪
+
+ref
+- https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth
+- https://openid.net/specs/fapi-2_0-security-02.html#name-main-differences-to-fapi-10
+
+
+### 🛡️ no unintended user sessions
+
+This library eliminates the known [`cross-site-request-forgery` (CSRF) vulnerability](https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.1.8) possible in `openid-connect` (OIDC) strategies with two independent methods, redundantly:
+1. embedding a signature of the `userSessionUuid` in the `pkceCodeChallenge` of the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest), for identity-providers which support [pkce](https://datatracker.ietf.org/doc/html/rfc7636)
+2. embedding a signature of the `userSessionUuid` in the `oidcRequestHash` set as the `state` of the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest)
+
+OIDC authentication strategies are susceptible to CSRF whenever a user has an existing auth session.
+
+- 🛑 CSRF vuln.: attacker can add their credentials to a victim's account
+  - root cause:
+    - your backend did not verify which user the `oidcResponseCode` was intended for
+  - for example:
+    - attacker successfully starts the oidc signin process and signs in with the oidc identity provider
+    - attacker halts the redirect on their device from the oidc identity provider to your server
+    - attacker extracts the `oidcResponseCode` on their device from the redirect the oidc identity provider was going to make to your server
+    - attacker creates a `redirectUrl` with their `oidcResponseCode` which anyone can open to resume the oidc-auth process
+    - victim clicks on this `redirectUrl`, after being tricked by attacker (e.g., "10 cool cats your dog doesn't want you to know about")
+    - victim is redirected to your backend, with the victim's session info, but with the attackers `oidcResponseCode`
+    - your backend exchanges the attackers `oidcResponseCode` for the attackers tokens
+    - your backend sees the victim's session and associates the attackers tokens to the victim's session's account
+
+The `userSessionUuid` input required by this library eliminates this vulnerability.
+
+Specifically, this library forces your backend to know the exact `userSessionUuid` for which the `oidcResponseCode` was granted before it can exchange the `oidcResponseCode` for the `tokens`. It does so with two independent methods redundantly:
+
+1. by including the `userSessionUuid` the request was intended for as part of the `nonce` salted hash signature set as the `pkceCodeVerifier` in the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). When your backend attempts to exchange the `oidcResponseCode` for the user's tokens, the identity provider [will require](https://datatracker.ietf.org/doc/html/rfc7636#section-4.6) the exact `pkceCodeVerifier` for which the `oidcResponseCode` was granted, which requires your backend to know the correct `userSessionUuid`.
+
+2. by including the `userSessionUuid` the request was intended for as part of the `nonce` salted hash signature set as the `oidcRequestHash` in the `state` of the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). When your backend attempts to exchange the `oidcResponseCode` for the user's tokens, this library [will require](TODO:link-to-exchange-function) your backend to know the exact `userSessionUuid` used to create the `oidcRequestHash`.
+
+If an attacker attempts to trick your backend to add the attacker's `oidcResponseCode` with the victim's `userSessionUuid`, your backend will not be able to exchange the `oidcResponseCode` for tokens.
+
+1. the identity provider will reject the token exchange because the `userSessionUuid` of the victim will not match the `userSessionUuid` with which the `pkceCodeVerifier` of the `oidcResponseCode` was issued 🛡️
+2. this library will reject the token exchange because the `userSessionUuid` of the victim will not match the `userSessionUuid` with which the `oidcRequestHash` was created 🛡️
+
+In other words, this guarantees that the `response.userSessionUuid === intended.userSessionUuid`, eliminating this vulnerability 💪
+
+Why do we use two independent mechanisms in parallel? Not all identity provider support [pkce](https://datatracker.ietf.org/doc/html/rfc7636) yet, which is what the first method depends on. This redundancy takes matters into our own hands and guarantees that users are secure even if the identity-provider does not support pkce.
+
+refs
+- https://datatracker.ietf.org/doc/html/rfc7636
+- https://datatracker.ietf.org/doc/html/rfc7636#section-4.6
+- https://datatracker.ietf.org/doc/html/rfc6819#section-4.4.1.8
+- https://datatracker.ietf.org/doc/html/rfc6819#section-5.3.5
+- https://technospace.medium.com/csrf-in-idp-initiated-openid-connct-7a2873420e86#:~:text=In%20OIDC%20flow%2C%20CSRF%20attacks,resources%20rather%20than%20the%20victim's.
+
+
+### 🛡️ no unverified redirect claims
+
+This library eliminates the known [parameter-injection (PINJ) vulnerability](https://openid.net/specs/openid-financial-api-part-2-1_0.html#authorization-response-parameter-injection-attack) possible in `openid-connect` (OIDC) strategies by preventing storing custom `state` in the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) and second with two independent methods, redundantly:
+
+1. embedding a signature of the `oidcRequestUuid` in the `pkceCodeChallenge` of the authentication request, for identity-providers which support [pkce](https://datatracker.ietf.org/doc/html/rfc7636)
+2. embedding a signature of the `oidcRequestUuid` in the `oidcRequestHash` set as the `state` of the authentication request
+
+OIDC authentication strategies are susceptible to PINJ whenever the backend receiving the response trusts the data present in the state parameter without verifying it.
+
+- 🛑 PINJ vuln.: attacker tampers with the `state` sent sent to your `redirectUri` in order to manipulate your backend
+  - root cause:
+    - your backend did not verify that the `state` it was given equals the `state` the `oidcResponseCode` was granted for
+  - for example:
+    - attacker successfully starts the oidc signin process and signs in with the oidc identity provider
+    - attacker halts the redirect on their device from the oidc identity provider to your server
+    - attacker extracts the `oidcResponseCode` on their device from the redirect the oidc identity provider was going to make to your frontend
+    - attacker creates a `redirectUrl` with their `oidcResponseCode` and a custom state
+    - victim or attacker then clicks on this `redirectUrl` causing your frontend to send the tampered state output to your backend
+    - your backend trusts that the outputs of the tampered state are authentic
+    - your backend executes logic which mutates protected resources based on the state data it assumes is trustworthy
+
+The `oidcRequestUuid` input required by this library eliminates this vulnerability.
+
+Specifically, this library only allows one value to be set into `state`, an `oidcRequestHash`. Your backend can persist any information it needs to know about the request and reference it with an `oidcRequestUuid`. Since it will not be able to set the `oidcRequestUuid` in any parameter that is returned on the oidc [authentication response](https://openid.net/specs/openid-connect-core-1_0.html#AuthResponse), your backend will be forced to set this value as a cookie accessible [only to the owner of the browser](TODO:link-to-code-that-set), labeled a `origination` cookie. This cookie will then be sent to your backend along with the oidc authentication response from the user's browser.
+
+It can then use the `oidcRequestUuid` to subsequently lookup this information when handling the `oidcResponseCode`. This eliminates the possibility that data extracted from the `state` of the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) may be tampered with.
+
+Further, this library forces your backend to know the exact `oidcRequestUuid` for which the `oidcResponseCode` was granted before it can exchange the `oidcResponseCode` for the `tokens`. It does so with two independent methods redundantly:
+
+1. by including the `oidcRequestUuid` the request was intended for as part of the `nonce` salted hash signature set as the `pkceCodeVerifier` in the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). When your backend attempts to exchange the `oidcResponseCode` for the user's tokens, the identity provider [will require](https://datatracker.ietf.org/doc/html/rfc7636#section-4.6) the exact `pkceCodeVerifier` for which the `oidcResponseCode` was granted, for which your backend will need the exact `oidcRequestUuid` to recreate the salted hash signature.
+
+2. by including the `oidcRequestUuid` the request was intended for as part of the `nonce` salted hash signature set as the `oidcRequestHash` in the `state` of the [authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest). When your backend attempts to exchange the `oidcResponseCode` for the user's tokens, this library [will require](TODO:link-to-exchange-function) your backend to know the exact `oidcRequestUuid` used to create the `oidcRequestHash`.
+
+
+Since with this strategy an attacker is not able to tamper with the contents referenced by an `oidcRequestUuid`, an attacker can only attempt to trick your backend by submitting an `oidcRequestUuid` with an `oidcResponseCode` for which it was not intended. However, if they attempt this, your backend will not be able to exchange the `oidcResponseCode` for tokens.
+
+
+1. the identity provider will reject the token exchange because the `oidcRequestUuid` submitted will not match the `oidcRequestUuid` with which the `pkceCodeVerifier` of the `oidcResponseCode` was issued 🛡️
+
+2. this library will reject the token exchange because the `oidcRequestUuid` submitted will not match the `oidcRequestUuid` with which the `oidcRequestHash` was created 🛡️
+
+In other words, this guarantees that the backend has nothing to trust except the `oidcRequestUuid` and guarantees that the `response.oidcRequestUuid === intended.oidcRequestUuid`, eliminating this vulnerability 💪
+
+Why do we use two independent mechanisms in parallel? Not all identity provider support [pkce](https://datatracker.ietf.org/doc/html/rfc7636) yet, which is what the first method depends on. This redundancy takes matters into our own hands and guarantees that users are secure even if the identity-provider does not support pkce.
+
+ref
+- https://datatracker.ietf.org/doc/html/rfc7636
+- https://datatracker.ietf.org/doc/html/rfc7636#section-4.6
