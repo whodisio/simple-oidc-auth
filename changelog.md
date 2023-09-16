@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.2...v1.0.3) (2023-09-16)
+
+
+### Bug Fixes
+
+* **pkg:** expose getTokensFromOidcResponseClaims ([c5933e1](https://github.com/whodisio/simple-oidc-auth/commit/c5933e1700d40b994f4c40a012e97981a6720ffb))
+
 ## [1.0.2](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.1...v1.0.2) (2023-09-16)
 
 
