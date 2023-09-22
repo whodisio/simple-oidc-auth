@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.3...v1.0.4) (2023-09-22)
+
+
+### Bug Fixes
+
+* **apple:** add support for apple oidc auth request ([a1937c8](https://github.com/whodisio/simple-oidc-auth/commit/a1937c82eeb387305dd6268992850ce1c4e447e7))
+
 ## [1.0.3](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.2...v1.0.3) (2023-09-16)
 
 
