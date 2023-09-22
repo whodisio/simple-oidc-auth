@@ -86,6 +86,7 @@ export const getOidcAuthenticationRequestUri = ({
         scope: request.scope,
         redirect_uri: request.redirectUri,
         state: stringifyQueryParams({ hash: request.hash }),
+        response_mode: 'form_post', // required by apple; supported by others
       },
     },
   });
