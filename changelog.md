@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.4...v1.0.5) (2023-09-22)
+
+
+### Bug Fixes
+
+* **oidc:** support form post auth response parsing ([bdedf9f](https://github.com/whodisio/simple-oidc-auth/commit/bdedf9f1450442693a31136a30b77b38da6ec739))
+
 ## [1.0.4](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.3...v1.0.4) (2023-09-22)
 
 
