@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`exchangeOidcAuthcodeForToken should correctly send the request via rest.post 1`] = `
+exports[`exchangeoidcResponseCodeForToken should correctly send the request via rest.post 1`] = `
 [
   [
     {

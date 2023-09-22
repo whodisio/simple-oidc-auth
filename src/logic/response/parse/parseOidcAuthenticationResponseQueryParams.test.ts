@@ -19,14 +19,13 @@ describe('parseOidcAuthenticationResponseQueryParams', () => {
     try {
       parseOidcAuthenticationResponseQueryParams({
         queryParams: {
-          code: '__OIDC_RESPONSE_CODE__',
-          state: stringifyQueryParams({ mash: '__OIDC_REQUEST_HASH__' }),
+          state: stringifyQueryParams({ hash: '__OIDC_REQUEST_HASH__' }),
         },
       });
       throw new Error('should not reach here');
     } catch (error) {
       expect(error).toBeInstanceOf(OidcAuthenticationResponseMalformedError);
-      expect(error.message).toContain('`hash` was missing ');
+      expect(error.message).toContain('`code` query parameter was missing ');
     }
   });
   it('should throw a helpful error if hash could not be found', () => {

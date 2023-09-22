@@ -2,13 +2,14 @@ import { OidcResponseClaims } from '../../../domain/OidcResponseClaims';
 import { OidcAuthenticationResponseMalformedError } from '../../errors/OidcAuthenticationResponseMalformedError';
 import { extractOidcRequestUuidFromOriginationCookie } from './extractOidcRequestUuidFromOriginationCookie';
 import { extractUserSessionUuidFromAuthorizationCookie } from './extractUserSessionUuidFromAuthorizationCookie';
+import { parseOidcAuthenticationResponseBody } from './parseOidcAuthenticationResponseBody';
 import { parseOidcAuthenticationResponseQueryParams } from './parseOidcAuthenticationResponseQueryParams';
 
 /**
  * parse the oidc authentication response data sent to a redirect endpoint via rest.get or rest.post
  *
  * features
- * - handles successful responses by extracting the `oidcAuthCode` and `authRequestHash` from the identity provider as well as the `authRequestUuid` and `userSessionUuid` from the samesite cookies
+ * - handles successful responses by extracting the `oidcResponseCode` and `oidcRequestHash` from the identity provider as well as the `authRequestUuid` and `userSessionUuid` from the samesite cookies
  * - handles unsuccessful responses by extracting the error from the [error response](https://openid.net/specs/openid-connect-core-1_0.html#AuthError)
  */
 export const parseOidcAuthenticationResponse = async ({
@@ -16,6 +17,7 @@ export const parseOidcAuthenticationResponse = async ({
   endpoint,
   headers,
   queryParams,
+  body,
   session,
 }: {
   /**
@@ -40,9 +42,17 @@ export const parseOidcAuthenticationResponse = async ({
    * the query parameters of the request
    *
    * note
-   * - the oidcAuthCode and authRequestHash will be extracted from here
+   * - the oidcResponseCode and oidcRequestHash will be extracted from here, when method=GET
    */
   queryParams: Record<string, string> | null;
+
+  /**
+   * the body of the request
+   *
+   * note
+   * - the oidcResponseCode and oidcRequestHash will be extracted from here, when method=POST
+   */
+  body: string | null;
 
   /**
    * the expected session auth configuration for the request
@@ -85,6 +95,20 @@ export const parseOidcAuthenticationResponse = async ({
       // grab the results from the query params
       return parseOidcAuthenticationResponseQueryParams({
         queryParams,
+      });
+    }
+
+    // handle post method
+    if (method === 'POST') {
+      // check that body was defined
+      if (!body)
+        throw new OidcAuthenticationResponseMalformedError(
+          'body must be defined for a post request',
+        );
+
+      // grab the results from the query params
+      return parseOidcAuthenticationResponseBody({
+        body,
       });
     }
 

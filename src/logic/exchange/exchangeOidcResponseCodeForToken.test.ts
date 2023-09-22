@@ -9,7 +9,7 @@ axiosMock.mockReturnValue({
   data: { access_token: '__access_token__', id_token: '__identity_token__' },
 });
 
-describe('exchangeOidcAuthcodeForToken', () => {
+describe('exchangeoidcResponseCodeForToken', () => {
   beforeEach(() => jest.clearAllMocks());
   it('should correctly send the request via rest.post', async () => {
     await exchangeOidcResponseCodeForTokens({
