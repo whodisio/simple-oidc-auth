@@ -13,6 +13,7 @@ export { getAuthedClaimsFromOidcIdentityToken } from './logic/wellknown/tokens/g
 export { isOfOidcIdentityTokenClaimsApple } from './logic/wellknown/tokens/isOfOidcIdentityTokenClaimsApple';
 export { isOfOidcIdentityTokenClaimsGoogle } from './logic/wellknown/tokens/isOfOidcIdentityTokenClaimsGoogle';
 export { extractOidcRequestUuidFromOriginationCookie } from './logic/response/parse/extractOidcRequestUuidFromOriginationCookie';
+export { computeOidcClientSecretForApple } from './logic/wellknown/secrets/computeOidcClientSecretForApple';
 
 // errors
 export { OidcAuthenticationResponseMalformedError } from './logic/errors/OidcAuthenticationResponseMalformedError';

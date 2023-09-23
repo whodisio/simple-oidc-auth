@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`exchangeoidcResponseCodeForToken should correctly send the request via rest.post 1`] = `
+exports[`exchangeOidcResponseCodeForToken should correctly send the request via rest.post 1`] = `
 [
   [
     {
@@ -17,6 +17,7 @@ exports[`exchangeoidcResponseCodeForToken should correctly send the request via 
       },
       "method": "POST",
       "url": "__endpoint__",
+      "validateStatus": [Function],
     },
   ],
 ]

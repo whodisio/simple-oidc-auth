@@ -4,7 +4,7 @@ ref
 - https://developer.apple.com/sign-in-with-apple/
 - https://developer.apple.com/sign-in-with-apple/get-started/
 - https://developer.apple.com/help/account/configure-app-capabilities/configure-sign-in-with-apple-for-the-web/
-- https://techdocs.akamai.com/identity-cloud/docs/the-sign-in-with-apple-social-login-configuration-guide
+- https://developer.apple.com/documentation/sign_in_with_apple/configuring_your_environment_for_sign_in_with_apple
 
 ### 0. Enroll in Apple Developer Program
 
@@ -22,6 +22,7 @@ ref
 ref
 - https://developer.apple.com/help/account/configure-app-capabilities/create-a-sign-in-with-apple-private-key
 - https://developer.apple.com/help/account/configure-app-capabilities/about-sign-in-with-apple
+- https://developer.apple.com/help/account/configure-app-capabilities/configure-sign-in-with-apple-for-the-web
 
 1.1. find or create an `App Id`:
   - if you have an existing `App Id` for this application, use it: https://developer.apple.com/account/resources/identifiers/list

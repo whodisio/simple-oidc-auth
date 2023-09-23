@@ -38,13 +38,14 @@ export const exchangeOidcResponseCodeForTokens = async ({
       redirect_uri: oidcRequestRedirectUri,
       code_verifier: oidcPkceCodeVerifier, // pkce support: https://datatracker.ietf.org/doc/html/rfc7636#section-4.5
     },
+    validateStatus: () => true, // dont throw for us, we will throw it ourselves, since the axios errors dont have good error messages
   });
 
   // extract the tokens from the response data
   if (response.status >= 300)
     throw new UnexpectedCodePathError(
       'unsuccessful response from oidc identity provider',
-      { response },
+      { status: response.status, data: response.data },
     );
   const { access_token: accessToken, id_token: identityToken } = response.data;
 

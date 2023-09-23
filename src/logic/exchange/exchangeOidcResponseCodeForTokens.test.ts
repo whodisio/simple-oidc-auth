@@ -9,7 +9,7 @@ axiosMock.mockReturnValue({
   data: { access_token: '__access_token__', id_token: '__identity_token__' },
 });
 
-describe('exchangeoidcResponseCodeForToken', () => {
+describe('exchangeOidcResponseCodeForToken', () => {
   beforeEach(() => jest.clearAllMocks());
   it('should correctly send the request via rest.post', async () => {
     await exchangeOidcResponseCodeForTokens({
@@ -20,21 +20,23 @@ describe('exchangeoidcResponseCodeForToken', () => {
       oidcRequestRedirectUri: '__oidc_request_redirect_uri__',
       oidcPkceCodeVerifier: '__oidc_pkce_code_verifier__',
     });
-    expect(axiosMock).toHaveBeenCalledWith({
-      method: 'POST',
-      url: '__endpoint__',
-      headers: {
-        'content-type': 'application/x-www-form-urlencoded',
-      },
-      data: {
-        grant_type: 'authorization_code', // https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
-        code: '__oidc_response_code__',
-        client_id: '__oidc_client_id__',
-        client_secret: '__oidc_client_secret__',
-        redirect_uri: '__oidc_request_redirect_uri__',
-        code_verifier: '__oidc_pkce_code_verifier__',
-      },
-    });
+    expect(axiosMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        method: 'POST',
+        url: '__endpoint__',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded',
+        },
+        data: {
+          grant_type: 'authorization_code', // https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
+          code: '__oidc_response_code__',
+          client_id: '__oidc_client_id__',
+          client_secret: '__oidc_client_secret__',
+          redirect_uri: '__oidc_request_redirect_uri__',
+          code_verifier: '__oidc_pkce_code_verifier__',
+        },
+      }),
+    );
     expect(axiosMock.mock.calls).toMatchSnapshot();
   });
   it('should return the access and identity tokens from the response', async () => {
