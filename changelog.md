@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.5...v1.1.0) (2023-09-23)
+
+
+### Features
+
+* **apple:** enable computing oidc client secret for apple ([c35777f](https://github.com/whodisio/simple-oidc-auth/commit/c35777f760a24419215d943e6016850a492b7319))
+
 ## [1.0.5](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.4...v1.0.5) (2023-09-22)
 
 
