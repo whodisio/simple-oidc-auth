@@ -2,6 +2,7 @@
 
 ref:
 - https://developers.facebook.com/docs/facebook-login/
+- https://developers.facebook.com/docs/facebook-login/guides/advanced/oidc-token
 
 ### 0. Open a Facebook Developers account
 
