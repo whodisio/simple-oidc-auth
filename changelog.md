@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/whodisio/simple-oidc-auth/compare/v1.1.0...v1.1.1) (2023-09-23)
+
+
+### Bug Fixes
+
+* **wellknown:** add apple jwks endpoint to wellknown registry ([23697a3](https://github.com/whodisio/simple-oidc-auth/commit/23697a3c5978e404a5fbbc6fe34c6e3603f5a520))
+
 ## [1.1.0](https://github.com/whodisio/simple-oidc-auth/compare/v1.0.5...v1.1.0) (2023-09-23)
 
 
