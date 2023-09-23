@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/whodisio/simple-oidc-auth/compare/v1.1.1...v1.1.2) (2023-09-23)
+
+
+### Bug Fixes
+
+* **deps:** decrement axios version for commonjs backwards compat ([e7a38fd](https://github.com/whodisio/simple-oidc-auth/commit/e7a38fd40f504a5495fa1e40ad14e8f662c9d52e))
+* **docs:** add relevant facebook doc link ([9aca5f7](https://github.com/whodisio/simple-oidc-auth/commit/9aca5f795e236c822cbaab7f8be7b2563f3d5c2a))
+
 ## [1.1.1](https://github.com/whodisio/simple-oidc-auth/compare/v1.1.0...v1.1.1) (2023-09-23)
 
 
