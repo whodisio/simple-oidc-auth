@@ -1,0 +1,9 @@
+org: whodisio
+extends:
+  - .agent/repo=bhrain/role=reviewer/keyrack.yml
+  - .agent/repo=bhuild/role=dispatcher/keyrack.yml
+  - .agent/repo=ehmpathy/role=mechanic/keyrack.yml
+env.prod: null
+env.prep:
+  - EHMPATH_BEAVER_GITHUB_TOKEN
+env.test: null
