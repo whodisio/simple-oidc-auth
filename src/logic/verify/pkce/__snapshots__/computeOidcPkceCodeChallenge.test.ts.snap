@@ -1,3 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`computeOidcPkceCodeChallenge should be deterministic 1`] = `"ZSo1zPq28s1l5x11Z7aG9jG2ezcdBDeyHTAJBkSsf1Q"`;

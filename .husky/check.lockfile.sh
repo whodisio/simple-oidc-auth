@@ -6,5 +6,9 @@ changed () {
 }
 
 if changed 'package-lock.json'; then
-  echo "📦 package-lock.json changed. Run npm install to update your locally installed dependencies."
+  echo "📦 package-lock.json changed. Run 'npm install' to update your locally installed dependencies."
+fi
+
+if changed 'pnpm-lock.yaml'; then
+  echo "📦 pnpm-lock.yaml changed. Run 'pnpm install' to update your locally installed dependencies."
 fi
