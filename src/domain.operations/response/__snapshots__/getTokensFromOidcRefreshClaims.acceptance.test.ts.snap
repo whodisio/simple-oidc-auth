@@ -1,0 +1,238 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t1] the daily cron wakes, silent refresh, NO rotation then: access + refresh (null) are the fresh tokens 1`] = `
+{
+  "access": "__access_day1__",
+  "refresh": null,
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t2] the next day, refresh again, provider DOES rotate then: the new refresh token is surfaced 1`] = `
+{
+  "access": "__access_day2__",
+  "refresh": "__refresh_day2__",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t3] a stale retry with the OLD (pre-rotation) token then: it throws OidcTokenRefreshExpiredError (single-use rotation) 1`] = `
+{
+  "message": "✋ OidcTokenRefreshExpiredError: refresh token expired/revoked — re-authenticate
+
+{
+  "data": {
+    "error": "invalid_grant"
+  },
+  "status": 400
+}",
+  "metadata": {
+    "data": {
+      "error": "invalid_grant",
+    },
+    "status": 400,
+  },
+  "name": "OidcTokenRefreshExpiredError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t4] recover with the NEW token; provider OMITS expires_in then: the rotated token works and expiresAt is null 1`] = `
+{
+  "access": "__access_day2b__",
+  "refresh": null,
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t5] the endpoint hiccups mid-cycle (503) then: it throws OidcTokenEndpointMalfunctionError (do NOT discard token) 1`] = `
+{
+  "message": "💥 OidcTokenEndpointMalfunctionError: token endpoint malfunction — retry with backoff
+
+{
+  "data": {
+    "error": "temporarily_unavailable"
+  },
+  "retryAfterMs": null,
+  "status": 503
+}",
+  "metadata": {
+    "data": {
+      "error": "temporarily_unavailable",
+    },
+    "retryAfterMs": null,
+    "status": 503,
+  },
+  "name": "OidcTokenEndpointMalfunctionError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t6] backoff, then retry the SAME good token then: the good token survived the hiccup 1`] = `
+{
+  "access": "__access_day2c__",
+  "refresh": null,
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t7] a down-scoped refresh whose scope exceeds the grant (invalid_scope) then: it throws OidcTokenRequestRejectedError (narrow, do NOT re-auth) 1`] = `
+{
+  "message": "✋ OidcTokenRequestRejectedError: refresh request rejected: invalid_scope — fix the request (scope/credentials), do not retry as-is
+
+{
+  "data": {
+    "error": "invalid_scope"
+  },
+  "providerError": "invalid_scope",
+  "status": 400
+}",
+  "metadata": {
+    "data": {
+      "error": "invalid_scope",
+    },
+    "providerError": "invalid_scope",
+    "status": 400,
+  },
+  "name": "OidcTokenRequestRejectedError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t8] the provider rate-limits (429 with Retry-After: 30) then: it throws OidcTokenEndpointMalfunctionError with retryAfterMs: 30000 1`] = `
+{
+  "message": "💥 OidcTokenEndpointMalfunctionError: token endpoint malfunction — retry with backoff
+
+{
+  "data": {
+    "error": "rate_limited"
+  },
+  "retryAfterMs": 30000,
+  "status": 429
+}",
+  "metadata": {
+    "data": {
+      "error": "rate_limited",
+    },
+    "retryAfterMs": 30000,
+    "status": 429,
+  },
+  "name": "OidcTokenEndpointMalfunctionError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t9] end of life — the provider revokes the refresh (invalid_grant) then: it throws OidcTokenRefreshExpiredError (route human to re-auth) 1`] = `
+{
+  "message": "✋ OidcTokenRefreshExpiredError: refresh token expired/revoked — re-authenticate
+
+{
+  "data": {
+    "error": "invalid_grant"
+  },
+  "status": 400
+}",
+  "metadata": {
+    "data": {
+      "error": "invalid_grant",
+    },
+    "status": 400,
+  },
+  "name": "OidcTokenRefreshExpiredError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t10] the endpoint answers a malformed 2xx (no access_token) then: it throws OidcTokenEndpointMalfunctionError (provider fault, retry) 1`] = `
+{
+  "message": "💥 OidcTokenEndpointMalfunctionError: token endpoint malfunction — retry with backoff
+
+{
+  "data": "<html>not a token body</html>",
+  "retryAfterMs": null,
+  "status": 200
+}",
+  "metadata": {
+    "data": "<html>not a token body</html>",
+    "retryAfterMs": null,
+    "status": 200,
+  },
+  "name": "OidcTokenEndpointMalfunctionError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t11] a down-scoped refresh with an explicit resource claim succeeds then: the fresh token is surfaced 1`] = `
+{
+  "access": "__access_scoped__",
+  "refresh": null,
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t12] the endpoint drops the socket (transport error) then: it throws OidcTokenEndpointMalfunctionError with a cause 1`] = `
+{
+  "message": "💥 OidcTokenEndpointMalfunctionError: token endpoint malfunction — retry with backoff
+
+{
+  "data": null,
+  "retryAfterMs": null,
+  "status": null
+}",
+  "metadata": {
+    "data": null,
+    "retryAfterMs": null,
+    "status": null,
+  },
+  "name": "OidcTokenEndpointMalfunctionError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t13] the operator credentials are bad (invalid_client, 401) then: it throws OidcTokenRequestRejectedError (fix creds, do NOT re-auth) 1`] = `
+{
+  "message": "✋ OidcTokenRequestRejectedError: refresh request rejected: invalid_client — fix the request (scope/credentials), do not retry as-is
+
+{
+  "data": {
+    "error": "invalid_client"
+  },
+  "providerError": "invalid_client",
+  "status": 401
+}",
+  "metadata": {
+    "data": {
+      "error": "invalid_client",
+    },
+    "providerError": "invalid_client",
+    "status": 401,
+  },
+  "name": "OidcTokenRequestRejectedError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t14] a rotation-collision — socket drop, then retry the now-spent token then: first, the transport drop throws OidcTokenEndpointMalfunctionError (retry, do NOT discard) 1`] = `
+{
+  "message": "💥 OidcTokenEndpointMalfunctionError: token endpoint malfunction — retry with backoff
+
+{
+  "data": null,
+  "retryAfterMs": null,
+  "status": null
+}",
+  "metadata": {
+    "data": null,
+    "retryAfterMs": null,
+    "status": null,
+  },
+  "name": "OidcTokenEndpointMalfunctionError",
+}
+`;
+
+exports[`getTokensFromOidcRefreshClaims (acceptance journey) given: [case1] a stored refresh token from an earlier code-grant login when: [t14] a rotation-collision — socket drop, then retry the now-spent token then: then, the retry with the spent token throws OidcTokenRefreshExpiredError (re-auth) 1`] = `
+{
+  "message": "✋ OidcTokenRefreshExpiredError: refresh token expired/revoked — re-authenticate
+
+{
+  "data": {
+    "error": "invalid_grant"
+  },
+  "status": 400
+}",
+  "metadata": {
+    "data": {
+      "error": "invalid_grant",
+    },
+    "status": 400,
+  },
+  "name": "OidcTokenRefreshExpiredError",
+}
+`;

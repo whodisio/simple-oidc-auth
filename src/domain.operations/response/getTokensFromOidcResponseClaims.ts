@@ -1,3 +1,5 @@
+import type { OidcExchangeOperator } from '@src/domain.objects/OidcExchangeOperator';
+import type { OidcExchangeProvider } from '@src/domain.objects/OidcExchangeProvider';
 import type { OidcResponseClaims } from '@src/domain.objects/OidcResponseClaims';
 import { exchangeOidcResponseCodeForTokens } from '@src/domain.operations/exchange/exchangeOidcResponseCodeForTokens';
 import { verifyOidcRequestHashForResponse } from '@src/domain.operations/verify/hash/verifyOidcRequestHashForResponse';
@@ -27,32 +29,14 @@ export const getTokensFromOidcResponseClaims = async ({
   claims: OidcResponseClaims;
 
   /**
-   * configuration for the identity provider that is powering the oidc flow
+   * configuration for the identity provider that powers the oidc flow
    */
-  provider: {
-    /**
-     * the token endpoint used to exchange the oidcResponseCode for tokens
-     *
-     * ref
-     * - https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3
-     */
-    tokenEndpoint: string;
-  };
+  provider: OidcExchangeProvider;
 
   /**
    * configuration for the operator of the oidc flow
    */
-  operator: {
-    /**
-     * the client id issued to the operator by the identity-provider
-     */
-    oidcClientId: string;
-
-    /**
-     * the client secret issued to the operator by the identity-provider
-     */
-    oidcClientSecret: string;
-  };
+  operator: OidcExchangeOperator;
 }): Promise<{ identity: string; access: string }> => {
   // verify that the securely claimed request inputs matches the publicly claimed request inputs
   await verifyOidcRequestHashForResponse({

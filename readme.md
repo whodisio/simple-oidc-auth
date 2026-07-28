@@ -186,6 +186,69 @@ const claims = await getAuthedClaimsFromOidcIdentityToken({
 });
 ```
 
+### 6. silently re-mint an access token with a refresh token
+
+Given a `refresh-token` from a prior offline-access grant, you can later spend it for a fresh `access-token` without another browser round-trip — the daily silent-refresh path ([rfc-6749 §6](https://datatracker.ietf.org/doc/html/rfc6749#section-6)).
+
+> note: the code-grant leg above (step 5) returns `{ identity, access }` and does not itself yield a `refresh-token` today — provision the initial refresh token from your identity-provider's offline-access grant (e.g. Google's `access_type=offline` consent). a tracked follow-on will add `refresh` to the code-grant leg; until then, supply it out-of-band.
+
+This call is symmetric with step 5: the same `{ provider, operator }` shape, plus a `claims` bundle that carries the refresh token and two optional claims (`scope`, `resource`).
+
+```ts
+import {
+  getTokensFromOidcRefreshClaims,
+  getTokenEndpointByOidcIdentityProvider,
+  OidcIdentityProvider,
+} from 'simple-oidc-auth';
+
+// spend a refresh token for a fresh access token
+const tokens = await getTokensFromOidcRefreshClaims({
+  provider: {
+    tokenEndpoint: getTokenEndpointByOidcIdentityProvider(
+      OidcIdentityProvider.GOOGLE,
+    ),
+  },
+  operator: {
+    oidcClientId: '__client_id__', // the client id the identity-provider granted to you after registration
+    oidcClientSecret: credentials.clientSecret, // the client secret the identity-provider granted to you after registration
+  },
+  claims: {
+    token: { refresh: '__refresh_token__' }, // the refresh token to spend
+    scope: null, // null = inherit the full originally-granted scope
+    resource: null, // null = no audience restriction on the minted token
+  },
+});
+
+// tokens.access    -> string               a fresh access token (always)
+// tokens.refresh   -> string | null        the new refresh token if the provider rotated, else null
+// tokens.expiresAt -> IsoTimeStamp | null   the absolute instant the access token dies, else null
+```
+
+When the provider rotates the refresh token, `tokens.refresh` is non-null — persist it atomically, because the old token is now spent.
+
+The load-bearing design decision is the three-way failure discrimination: a caller tells the outcomes apart from the thrown type alone, and each maps to exactly one recovery.
+
+```ts
+import {
+  OidcTokenRefreshExpiredError,
+  OidcTokenRequestRejectedError,
+  OidcTokenEndpointMalfunctionError,
+} from 'simple-oidc-auth';
+
+try {
+  const tokens = await getTokensFromOidcRefreshClaims({ /* ...as above... */ });
+} catch (error) {
+  // the refresh token is dead (revoked / expired) -> route the human back to full login
+  if (error instanceof OidcTokenRefreshExpiredError) { /* re-auth */ }
+
+  // the request was rejected (scope too broad / bad creds) -> fix the request, do not retry as-is
+  if (error instanceof OidcTokenRequestRejectedError) { /* fix request */ }
+
+  // the endpoint hiccuped (5xx / 429 / dropped socket) -> back off and retry; never discard a good token
+  if (error instanceof OidcTokenEndpointMalfunctionError) { /* retry with backoff */ }
+}
+```
+
 # background
 
 openid-connect, oidc, is an opensource standard which allows users to leverage the identities they've established with apps they already use to sign into other apps. (e.g., social auth)
