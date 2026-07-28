@@ -14,6 +14,10 @@ const PROVIDER_TO_TOKEN_ENDPOINT_REGISTRY: Record<
   [OidcIdentityProvider.APPLE]: 'https://appleid.apple.com/auth/token', // per https://developer.apple.com/documentation/sign_in_with_apple/generate_and_validate_tokens
   [OidcIdentityProvider.FACEBOOK]:
     'https://graph.facebook.com/v17.0/oauth/token', // per https://developers.facebook.com/docs/facebook-login/guides/advanced/manual-flow#exchangecode
+  // caveat: facebook's endpoint does NOT speak the rfc-6749 §6 refresh_token grant — it uses a
+  // non-standard long-lived-token exchange. so this endpoint is valid for the code grant
+  // (getTokensFromOidcResponseClaims) but NOT for getTokensFromOidcRefreshClaims, which is scoped
+  // to standards-compliant providers; a facebook refresh surfaces as a typed OidcToken* error
 };
 
 export const getTokenEndpointByOidcIdentityProvider = (

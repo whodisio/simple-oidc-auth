@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`exchangeRefreshTokenForTokens (integration) given: [case9] scope + resource are set when: [t0] the exchange is called then: the raw form-urlencoded body matches the snapshot 1`] = `"grant_type=refresh_token&refresh_token=__refresh_token__&client_id=__client_id__&client_secret=__client_secret__&scope=email+profile&resource=https%3A%2F%2Fapi.example.com"`;

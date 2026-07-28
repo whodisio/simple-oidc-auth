@@ -1,12 +1,15 @@
-// functions
-
-// types
+export type { OidcExchangeOperator } from './domain.objects/OidcExchangeOperator';
+export type { OidcExchangeProvider } from './domain.objects/OidcExchangeProvider';
 export { OidcIdentityProvider } from './domain.objects/OidcIdentityProvider';
+export type { OidcRefreshClaims } from './domain.objects/OidcRefreshClaims';
 export type { OidcResponseClaims } from './domain.objects/OidcResponseClaims';
-// errors
 export { OidcAuthenticationResponseMalformedError } from './domain.operations/errors/OidcAuthenticationResponseMalformedError';
+export { OidcTokenEndpointMalfunctionError } from './domain.operations/errors/OidcTokenEndpointMalfunctionError';
+export { OidcTokenRefreshExpiredError } from './domain.operations/errors/OidcTokenRefreshExpiredError';
+export { OidcTokenRequestRejectedError } from './domain.operations/errors/OidcTokenRequestRejectedError';
 export { PotentialOidcAttackError } from './domain.operations/errors/PotentialOidcAttackError';
 export { getOidcAuthenticationRequestUri } from './domain.operations/request/getOidcAuthenticationRequestUri';
+export { getTokensFromOidcRefreshClaims } from './domain.operations/response/getTokensFromOidcRefreshClaims';
 export { getTokensFromOidcResponseClaims } from './domain.operations/response/getTokensFromOidcResponseClaims';
 export { extractOidcRequestUuidFromOriginationCookie } from './domain.operations/response/parse/extractOidcRequestUuidFromOriginationCookie';
 export { parseOidcAuthenticationResponse } from './domain.operations/response/parse/parseOidcAuthenticationResponse';
